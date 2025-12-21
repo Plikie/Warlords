@@ -140,6 +140,7 @@ public abstract class WarlordsEntity {
     private int flagDropCooldown = 0;
     private int flagPickCooldown = 0;
     private int hitCooldown = 20;
+    private int pveDamageTakenCooldown = 0;
     private int pveHitCooldown = 13;
     private int pveHitRange = 3;
     private int currency;
@@ -226,6 +227,8 @@ public abstract class WarlordsEntity {
         this.entity = entity;
         this.deathLocation = this.entity.getLocation();
         this.specClass = Specializations.PYROMANCER; // default for PvE
+        this.pveDamageTakenCooldown = isInPve() ? 12 : 0;
+        Bukkit.broadcast(Component.text("damage taken cd: " + pveDamageTakenCooldown));
     }
 
     protected void resetSpeed() {
@@ -1326,6 +1329,12 @@ public abstract class WarlordsEntity {
         if (getHitCooldown() > 0) {
             setHitCooldown(getHitCooldown() - 1);
         }
+
+        // Damage taken cooldown in pve
+        if (getPveDamageTakenCooldown() > 0) {
+            setPveDamageTakenCooldown(getPveDamageTakenCooldown() - 1);
+        }
+
     }
 
     private boolean decrementRespawnTimer() {
@@ -1808,4 +1817,11 @@ public abstract class WarlordsEntity {
         this.pveHitRange = pveHitRange;
     }
 
+    public int getPveDamageTakenCooldown() {
+        return pveDamageTakenCooldown;
+    }
+
+    public void setPveDamageTakenCooldown(int pveDamageTakenCooldown) {
+        this.pveDamageTakenCooldown = pveDamageTakenCooldown;
+    }
 }

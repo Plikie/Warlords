@@ -350,24 +350,30 @@ public class WarlordsEvents implements Listener {
         if ((attacker instanceof Player && ((Player) attacker).getInventory().getHeldItemSlot() != 0) || wpAttacker.getHitCooldown() > 0) {
             return;
         }
-
+        if (wpVictim.getPveDamageTakenCooldown() > 0) {
+            Bukkit.broadcast(Component.text("Damage taken on cooldown"));
+            return;
+        }
         wpAttacker.setHitCooldown(wpAttacker.isInPve() ? wpAttacker.getPveHitCooldown() : wpAttacker.getBaseHitCooldownValue());
-        Optional<WarlordsDamageHealingFinalEvent> finalEvent = Optional.empty();
+        Optional<WarlordsDamageHealingFinalEvent> finalEvent;
 
         if (wpAttacker instanceof WarlordsNPC warlordsNPC) {
             if (!warlordsNPC.getCooldownManager().hasCooldown(SoulShackle.class) && !(warlordsNPC.getMob() instanceof Unsilencable)) {
-                if (!(warlordsNPC.getMinMeleeDamage() == 0)) {
-                    finalEvent = wpVictim.addInstance(InstanceBuilder
-                            .melee()
-                            .source(wpAttacker)
-                            .min(warlordsNPC.getMinMeleeDamage())
-                            .max(warlordsNPC.getMaxMeleeDamage())
-                            .critChance(warlordsNPC.getMeleeCritChance())
-                            .critMultiplier(warlordsNPC.getMeleeCritMultiplier())
-                            .flags(InstanceFlags.NO_HIT_SOUND)
-                    );
-                }
+                return;
             }
+            if (warlordsNPC.getMinMeleeDamage() == 0) {
+                return;
+            }
+            finalEvent = wpVictim.addInstance(InstanceBuilder
+                    .melee()
+                    .source(wpAttacker)
+                    .min(warlordsNPC.getMinMeleeDamage())
+                    .max(warlordsNPC.getMaxMeleeDamage())
+                    .critChance(warlordsNPC.getMeleeCritChance())
+                    .critMultiplier(warlordsNPC.getMeleeCritMultiplier())
+                    .flags(InstanceFlags.NO_HIT_SOUND)
+            );
+            wpVictim.setPveDamageTakenCooldown(12);
         } else {
             if (wpAttacker instanceof WarlordsPlayer warlordsPlayer && warlordsPlayer.getWeapon() != null) {
                 AbstractWeapon weapon = warlordsPlayer.getWeapon();

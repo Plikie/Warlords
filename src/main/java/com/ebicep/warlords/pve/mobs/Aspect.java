@@ -111,7 +111,6 @@ public enum Aspect {
 
                     }
             ) {
-
                 @Override
                 protected Listener getListener() {
                     return new Listener() {
