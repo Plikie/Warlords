@@ -13,7 +13,6 @@ public class FlameburstBranch extends AbstractUpgradeBranch<FlameBurst> {
         UpgradeTreeBuilder
                 .create(abilityTree, this)
                 .addUpgradeDamage(ability.getDamageValues().getFlameBurstDamage(), 7.5f)
-
                 .addUpgradeCooldown(ability)
                 .addTo(treeA);
 
