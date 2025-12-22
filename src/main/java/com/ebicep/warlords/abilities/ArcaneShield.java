@@ -61,49 +61,70 @@ public class ArcaneShield extends AbstractAbility implements BlueAbilityIcon, Du
     protected boolean onActivateInternal(@Nonnull WarlordsEntity wp) {
         Utils.playGlobalSound(wp.getLocation(), "mage.arcaneshield.activation", 2, 1);
         Shield shield = new Shield(name, maxShieldHealth);
-        wp.getCooldownManager().addCooldown(new RegularCooldown<>(name, "ARCA", Shield.class, shield, wp, CooldownTypes.ABILITY, cooldownManager -> {
-            if (pveMasterUpgrade) {
-                Utils.playGlobalSound(wp.getLocation(), "mage.arcaneshield.activation", 2, 0.5f);
-                EffectUtils.strikeLightning(wp.getLocation(), false);
-                for (WarlordsEntity we : PlayerFilter.entitiesAround(wp, 6, 6, 6).aliveEnemiesOf(wp).closestFirst(wp)) {
-                    we.setStunTicks(6 * 20);
-                }
-            } else if (pveMasterUpgrade2) {
-                List<AbstractAbility> abilities = wp.getAbilities();
-                if (abilities.isEmpty()) {
-                    return;
-                }
-                AbstractAbility rightClick = abilities.get(0);
-                FloatModifiable.FloatModifier modifier = rightClick.getEnergyCost().addModifier(FloatModifiable.ModifierType.MULTIPLICATIVE_ADDITIVE,
-                        "Arcane Energy", -.25f
-                );
-                wp.updateItem(rightClick);
-                wp.getCooldownManager()
-                  .addCooldown(new RegularCooldown<>("Arcane Energy", "ARC", ArcaneShield.class, new ArcaneShield(), wp, CooldownTypes.ABILITY, cooldownManager2 -> {
-                      modifier.forceEnd();
-                      wp.updateItem(rightClick);
-                  }, 6 * 20, Collections.singletonList((cooldown, ticksLeft, ticksElapsed) -> {
-                      if (ticksElapsed % 3 == 0) {
-                          EffectUtils.displayParticle(Particle.ELECTRIC_SPARK, wp.getLocation().add(0, 1, 0), 10, .4, .4, .4, 0);
-                      }
-                  })
-                  ));
-            }
-        }, cooldownManager -> {
-            if (shield.isBroken()) {
-                Bukkit.getPluginManager().callEvent(new WarlordsArcaneShieldBrokenEvent(wp));
-                stats.timesBroken++;
-            }
-            stats.totalAbsorbed += shield.getMaxShieldHealth() - Math.max(0, shield.getShieldHealth());
-        }, tickDuration, Collections.singletonList((cooldown, ticksLeft, ticksElapsed) -> {
-            if (ticksElapsed % 3 == 0) {
-                Location location = wp.getLocation();
-                location.add(0, 1.5, 0);
-                EffectUtils.displayParticle(Particle.CLOUD, location, 2, 0.15, 0.3, 0.15, 0.01);
-                EffectUtils.displayParticle(Particle.FIREWORK, location, 1, 0.3, 0.3, 0.3, 0.0001);
-                EffectUtils.displayParticle(Particle.WITCH, location, 1, 0.3, 0.3, 0.3, 0);
-            }
-        })
+        wp.getCooldownManager().addCooldown(new RegularCooldown<>(
+                name,
+                "ARCA",
+                Shield.class,
+                shield,
+                wp,
+                CooldownTypes.ABILITY,
+                cooldownManager -> {
+                    if (pveMasterUpgrade2) {
+                        List<AbstractAbility> abilities = wp.getAbilities();
+                        if (abilities.isEmpty()) {
+                            return;
+                        }
+                        Utils.playGlobalSound(wp.getLocation(), "mage.arcaneshield.activation", 2, 0.5f);
+                        EffectUtils.strikeLightning(wp.getLocation(), false);
+                        for (WarlordsEntity we : PlayerFilter
+                                .entitiesAround(wp, 6, 6, 6)
+                                .aliveEnemiesOf(wp)
+                                .closestFirst(wp)
+                        ) {
+                            we.setStunTicks(6 * 20);
+                        }
+                        AbstractAbility rightClick = abilities.getFirst();
+                        FloatModifiable.FloatModifier modifier = rightClick.getEnergyCost().addModifier(FloatModifiable.ModifierType.ADDITIVE_MULTIPLIER,
+                                "Arcane Energy", -.25f
+                        );
+                        wp.updateItem(rightClick);
+                        wp.getCooldownManager().addCooldown(new RegularCooldown<>(
+                                "Arcane Energy",
+                                "ARC",
+                                ArcaneShield.class,
+                                new ArcaneShield(),
+                                wp,
+                                CooldownTypes.ABILITY,
+                                cooldownManager2 -> {
+                                    modifier.forceEnd();
+                                    wp.updateItem(rightClick);
+                                },
+                                6 * 20,
+                                Collections.singletonList((cooldown, ticksLeft, ticksElapsed) -> {
+                                    if (ticksElapsed % 3 == 0) {
+                                        EffectUtils.displayParticle(Particle.ELECTRIC_SPARK, wp.getLocation().add(0, 1, 0), 10, .4, .4, .4, 0);
+                                    }
+                                })
+                        ));
+                    }
+                },
+                cooldownManager -> {
+                    if (shield.isBroken()) {
+                        Bukkit.getPluginManager().callEvent(new WarlordsArcaneShieldBrokenEvent(wp));
+                        stats.timesBroken++;
+                    }
+                    stats.totalAbsorbed += shield.getMaxShieldHealth() - Math.max(0, shield.getShieldHealth());
+                },
+                tickDuration,
+                Collections.singletonList((cooldown, ticksLeft, ticksElapsed) -> {
+                    if (ticksElapsed % 3 == 0) {
+                        Location location = wp.getLocation();
+                        location.add(0, 1.5, 0);
+                        EffectUtils.displayParticle(Particle.CLOUD, location, 2, 0.15, 0.3, 0.15, 0.01);
+                        EffectUtils.displayParticle(Particle.FIREWORK, location, 1, 0.3, 0.3, 0.3, 0.0001);
+                        EffectUtils.displayParticle(Particle.WITCH, location, 1, 0.3, 0.3, 0.3, 0);
+                    }
+                })
         ) {
             @Override
             public PlayerNameData addPrefixFromOther() {
@@ -113,6 +134,7 @@ public class ArcaneShield extends AbstractAbility implements BlueAbilityIcon, Du
                     event.getWarlordsEntity().getCooldownManager().queueUpdatePlayerNames();
                 }
         ));
+
         return true;
     }
 
