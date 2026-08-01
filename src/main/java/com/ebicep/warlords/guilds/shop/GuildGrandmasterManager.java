@@ -30,6 +30,9 @@ public final class GuildGrandmasterManager implements Listener {
     private GuildGrandmasterManager() {
     }
 
+    public void init() {
+    }
+
     @EventHandler
     public void onGuildMenuOpen(InventoryOpenEvent event) {
         if (!(event.getPlayer() instanceof Player) || !event.getView().getTitle().startsWith("Guild Settings:")) {
