@@ -84,7 +84,8 @@ public final class VialManager implements Listener {
                 .append("expires_at", activeVial.expiresAt().toEpochMilli())));
         Document document = new Document("_id", profile.getUuid().toString())
                 .append("inventory", inventory)
-                .append("active", active);
+                .append("active", active)
+                .append("fairy_essence_purchase_week", profile.getFairyEssencePurchaseWeek());
         Warlords.newChain().async(() -> collection().replaceOne(eq("_id", profile.getUuid().toString()), document, new ReplaceOptions().upsert(true))).execute();
     }
 
@@ -114,7 +115,8 @@ public final class VialManager implements Listener {
                 }
                 try {
                     VialType type = VialType.valueOf(activeDocument.getString("type"));
-                    long expiration = activeDocument.getLong("expires_at");
+                    Number expirationValue = activeDocument.get("expires_at", Number.class);
+                    long expiration = expirationValue == null ? 0 : expirationValue.longValue();
                     if (expiration > Instant.now().toEpochMilli()) {
                         profile.getActiveVials().put(
                                 VialType.VialCategory.valueOf(categoryName),
@@ -125,6 +127,10 @@ public final class VialManager implements Listener {
                 }
             });
         }
+        Number fairyWeek = document.get("fairy_essence_purchase_week", Number.class);
+        if (fairyWeek != null) {
+            profile.setFairyEssencePurchaseWeek(fairyWeek.longValue());
+        }
         return profile;
     }
 
@@ -132,7 +138,7 @@ public final class VialManager implements Listener {
         return DatabaseManager.warlordsDatabase.getCollection(COLLECTION);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onCurrency(WarlordsAddCurrencyEvent event) {
         double multiplier = getMultiplier(event.getWarlordsEntity().getUuid(), VialType.VialCategory.INSIGNIA);
         if (multiplier != 1) {
@@ -140,13 +146,13 @@ public final class VialManager implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onWeaponDrop(WarlordsDropWeaponEvent event) {
         double multiplier = getMultiplier(event.getWarlordsEntity().getUuid(), VialType.VialCategory.WEAPON_DROP);
         event.setModifier(event.getModifier() * multiplier);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemDrop(WarlordsDropItemEvent event) {
         double multiplier = getMultiplier(event.getWarlordsEntity().getUuid(), VialType.VialCategory.ITEM_DROP);
         event.setModifier(event.getModifier() * multiplier);
@@ -154,7 +160,7 @@ public final class VialManager implements Listener {
 
     @EventHandler
     public void onPvEMenuOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player) || !event.getView().getTitle().equals("PvE Menu")) {
+        if (!(event.getPlayer() instanceof Player) || !event.getView().getTitle().equals("PvE Menu")) {
             return;
         }
         Bukkit.getScheduler().runTask(Warlords.getInstance(), () -> event.getInventory().setItem(PVE_MENU_SLOT, PVE_MENU_ITEM));
