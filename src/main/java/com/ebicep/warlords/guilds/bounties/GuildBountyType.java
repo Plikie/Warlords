@@ -12,7 +12,7 @@ public enum GuildBountyType {
     KILL_SKELETONS("Bone Breakers", "Kill 50,000 Skeletons as a guild.", 50_000, 100_000, 25_000, 25_000, Material.SKELETON_SKULL),
     WAVE_100("Centennial Stand", "Reach wave 100 with at least 4 guild members.", 1, 250_000, 75_000, 75_000, Material.BEACON),
     KILL_ZOMBIES("Grave Cleaners", "Kill 50,000 Zombies as a guild.", 50_000, 100_000, 25_000, 25_000, Material.ZOMBIE_HEAD),
-    ONSLAUGHT_60("Unbroken Hour", "Reach 60 minutes in Onslaught with at least 3 guild members.", 1, 250_000, 75_000, 75_000, Material.HOURGLASS);
+    ONSLAUGHT_60("Unbroken Hour", "Reach 60 minutes in Onslaught with at least 3 guild members.", 1, 250_000, 75_000, 75_000, Material.CLOCK);
 
     public static final GuildBountyType[] VALUES = values();
     private final String name;
