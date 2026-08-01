@@ -56,16 +56,21 @@ public final class VialMenu {
             index++;
         }
 
+        List<Component> activeVialLore = profile.getActiveVials().isEmpty()
+                ? List.of(Component.text("No Vials are currently active.", NamedTextColor.GRAY))
+                : profile.getActiveVials().values().stream()
+                .<Component>map(active -> Component.text(
+                        active.type().getName() + ": " + VialManager.formatRemaining(active.expiresAt()),
+                        NamedTextColor.YELLOW
+                ))
+                .toList();
+
         menu.setItem(3, 5, WarlordsNewHotbarMenu.PvEMenu.MENU_BACK_PVE, (m, e) -> WarlordsNewHotbarMenu.PvEMenu.openPvEMenu(player));
         menu.setItem(4, 5, Menu.MENU_CLOSE, Menu.ACTION_CLOSE_MENU);
         menu.setItem(5, 5,
                 new ItemBuilder(Material.CLOCK)
                         .name(Component.text("Active Vials", NamedTextColor.GREEN))
-                        .lore(profile.getActiveVials().isEmpty()
-                                ? List.of(Component.text("No Vials are currently active.", NamedTextColor.GRAY))
-                                : profile.getActiveVials().values().stream()
-                                .map(active -> Component.text(active.type().getName() + ": " + VialManager.formatRemaining(active.expiresAt()), NamedTextColor.YELLOW))
-                                .toList())
+                        .lore(activeVialLore)
                         .get(),
                 Menu.ACTION_DO_NOTHING
         );
