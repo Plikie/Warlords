@@ -3,8 +3,13 @@ package com.ebicep.warlords.guilds;
 import com.ebicep.warlords.Warlords;
 import com.ebicep.warlords.database.DatabaseManager;
 import com.ebicep.warlords.database.leaderboards.guilds.GuildLeaderboardManager;
+import com.ebicep.warlords.guilds.bounties.GuildBountyManager;
+import com.ebicep.warlords.guilds.bounties.GuildBountyMenu;
 import com.ebicep.warlords.guilds.logs.types.twoplayer.GuildLogInvite;
+import com.ebicep.warlords.guilds.shop.GuildGrandmasterManager;
+import com.ebicep.warlords.guilds.shop.GuildShopManager;
 import com.ebicep.warlords.guilds.upgrades.temporary.GuildUpgradeTemporary;
+import com.ebicep.warlords.pve.vials.VialManager;
 import com.ebicep.warlords.util.chat.ChatUtils;
 import com.ebicep.warlords.util.java.Pair;
 import net.kyori.adventure.text.Component;
@@ -12,57 +17,25 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 public class GuildManager {
 
     public static final List<Guild> GUILDS = new ArrayList<>();
     private static final HashMap<GuildInvite, Instant> INVITES = new HashMap<>();
-
     private static final Set<Guild> GUILDS_TO_UPDATE = new HashSet<>();
-
-    static {
-        new BukkitRunnable() {
-
-            int secondsElapsed = 0;
-
-            @Override
-            public void run() {
-                //check for guilds to update
-                if (secondsElapsed % 20 == 0) {
-                    Warlords.newChain()
-                            .async(GuildManager::updateGuilds)
-                            .sync(GUILDS_TO_UPDATE::clear)
-                            .execute();
-                }
-                //check for guild temp upgrades expiring
-                for (Guild guild : GUILDS) {
-                    guild.getUpgrades().removeIf(upgrade -> {
-                        if (!(upgrade instanceof GuildUpgradeTemporary)) {
-                            return false;
-                        }
-                        boolean shouldRemove = ((GuildUpgradeTemporary) upgrade).getExpirationDate().isBefore(Instant.now());
-                        if (shouldRemove) {
-                            for (Player player : guild.getOnlinePlayers()) {
-                                Guild.sendGuildMessage(player,
-                                        Component.text("Your guild upgrade ", NamedTextColor.RED)
-                                                 .append(Component.text(upgrade.getUpgrade().getName(), NamedTextColor.YELLOW))
-                                                 .append(Component.text(" has expired!"))
-                                );
-                            }
-                        }
-                        return shouldRemove;
-                    });
-                }
-                secondsElapsed++;
-            }
-        }.runTaskTimer(Warlords.getInstance(), 60, 20);
-    }
+    private static boolean reworkInitialized;
 
     public static void updateGuilds() {
         GUILDS_TO_UPDATE.forEach(guild -> DatabaseManager.guildService.update(guild));
@@ -71,6 +44,10 @@ public class GuildManager {
     public static void init() {
         GUILDS.forEach(Guild::reloadPlayerCache);
         GUILDS.forEach(guild -> {
+            boolean removedTemporaryBlessings = guild.getUpgrades().removeIf(GuildUpgradeTemporary.class::isInstance);
+            if (removedTemporaryBlessings) {
+                ChatUtils.MessageType.GUILD_SERVICE.sendMessage("Removed legacy temporary blessings from guild " + guild.getName());
+            }
             for (Guild.Patches patch : Guild.Patches.VALUES) {
                 List<Guild.Patches> patchesApplied = guild.getPatchesApplied();
                 if (patchesApplied.contains(patch)) {
@@ -85,8 +62,22 @@ public class GuildManager {
                     ChatUtils.MessageType.WARLORDS.sendErrorMessage("Failed to apply " + patch + " patch to guild " + guild.getName());
                 }
             }
+            GuildShopManager.INSTANCE.getProfile(guild);
             queueUpdateGuild(guild);
         });
+        initializeGuildRework();
+    }
+
+    private static void initializeGuildRework() {
+        if (reworkInitialized) {
+            return;
+        }
+        reworkInitialized = true;
+        Bukkit.getPluginManager().registerEvents(VialManager.INSTANCE, Warlords.getInstance());
+        Bukkit.getPluginManager().registerEvents(GuildBountyManager.INSTANCE, Warlords.getInstance());
+        Bukkit.getPluginManager().registerEvents(GuildBountyMenu.INSTANCE, Warlords.getInstance());
+        Bukkit.getPluginManager().registerEvents(GuildGrandmasterManager.INSTANCE, Warlords.getInstance());
+        GuildGrandmasterManager.INSTANCE.init();
     }
 
     public static boolean existingGuildWithName(String name) {
@@ -97,6 +88,7 @@ public class GuildManager {
         GUILDS.add(guild);
         GuildLeaderboardManager.COINS_LEADERBOARD.forEach((timing, guilds) -> guilds.add(guild));
         GuildLeaderboardManager.EXPERIENCE_LEADERBOARD.forEach((timing, guilds) -> guilds.add(guild));
+        GuildShopManager.INSTANCE.getProfile(guild);
         queueUpdateGuild(guild);
     }
 
@@ -142,11 +134,11 @@ public class GuildManager {
         );
         ChatUtils.sendCenteredMessage(to,
                 Component.text("You have", NamedTextColor.YELLOW)
-                         .append(Component.text(" 5 ", NamedTextColor.RED))
-                         .append(Component.text("minutes to accept. "))
-                         .append(Component.text("Click here to join " + guild.getName(), NamedTextColor.GOLD))
-                         .hoverEvent(HoverEvent.showText(Component.text("Click to join " + guild.getName(), NamedTextColor.GREEN)))
-                         .clickEvent(ClickEvent.runCommand("/guild join " + guild.getName()))
+                        .append(Component.text(" 5 ", NamedTextColor.RED))
+                        .append(Component.text("minutes to accept. "))
+                        .append(Component.text("Click here to join " + guild.getName(), NamedTextColor.GOLD))
+                        .hoverEvent(HoverEvent.showText(Component.text("Click to join " + guild.getName(), NamedTextColor.GREEN)))
+                        .clickEvent(ClickEvent.runCommand("/guild join " + guild.getName()))
         );
         ChatUtils.sendCenteredMessage(to, Component.text("------------------------------------------", NamedTextColor.GREEN, TextDecoration.BOLD));
     }
@@ -162,12 +154,11 @@ public class GuildManager {
 
     public static Optional<Guild> getGuildFromName(String guildName) {
         return GUILDS.stream()
-                     .filter(guild -> guild.getDisbandDate() == null && guild.getName().equalsIgnoreCase(guildName))
-                     .findFirst();
+                .filter(guild -> guild.getDisbandDate() == null && guild.getName().equalsIgnoreCase(guildName))
+                .findFirst();
     }
 
     record GuildInvite(UUID uuid, Guild guild) {
-
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -179,7 +170,5 @@ public class GuildManager {
             GuildInvite that = (GuildInvite) o;
             return uuid.equals(that.uuid) && guild.equals(that.guild);
         }
-
     }
-
 }
