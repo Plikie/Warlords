@@ -95,7 +95,6 @@ public class GuildManager {
         Bukkit.getPluginManager().registerEvents(GuildBountyManager.INSTANCE, Warlords.getInstance());
         Bukkit.getPluginManager().registerEvents(GuildBountyMenu.INSTANCE, Warlords.getInstance());
         Bukkit.getPluginManager().registerEvents(GuildGrandmasterManager.INSTANCE, Warlords.getInstance());
-        GuildGrandmasterManager.INSTANCE.init();
     }
 
     public static boolean existingGuildWithName(String name) {
@@ -187,6 +186,11 @@ public class GuildManager {
             }
             GuildInvite that = (GuildInvite) o;
             return uuid.equals(that.uuid) && guild.equals(that.guild);
+        }
+
+        @Override
+        public int hashCode() {
+            return uuid.hashCode();
         }
     }
 }
