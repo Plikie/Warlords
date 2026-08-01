@@ -15,7 +15,7 @@ public enum GuildShopUnlock {
     ITEM_DROP_RATE_II(VialType.ITEM_DROP_RATE_II),
     ITEM_DROP_RATE_III(VialType.ITEM_DROP_RATE_III),
     ITEM_DROP_RATE_IV(VialType.ITEM_DROP_RATE_IV),
-    FAIRY_ESSENCE_POUCH("Fairy Essence Pouch", 500_000, Material.MAGENTA_BUNDLE, null),
+    FAIRY_ESSENCE_POUCH("Fairy Essence Pouch", 500_000, Material.BUNDLE, null),
     GUILD_BOUNTY_SLOT_1("Guild Bounty Slot 1", 1_000_000, Material.WRITABLE_BOOK, null),
     GUILD_BOUNTY_SLOT_2("Guild Bounty Slot 2", 2_000_000, Material.WRITABLE_BOOK, null);
 
