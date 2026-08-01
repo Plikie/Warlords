@@ -95,7 +95,6 @@ public class GuildManager {
         Bukkit.getPluginManager().registerEvents(GuildBountyManager.INSTANCE, Warlords.getInstance());
         Bukkit.getPluginManager().registerEvents(GuildBountyMenu.INSTANCE, Warlords.getInstance());
         Bukkit.getPluginManager().registerEvents(GuildGrandmasterManager.INSTANCE, Warlords.getInstance());
-        GuildGrandmasterManager.INSTANCE.init();
     }
 
     public static boolean existingGuildWithName(String name) {
