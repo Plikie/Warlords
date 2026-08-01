@@ -19,6 +19,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +37,23 @@ public class GuildManager {
     private static final HashMap<GuildInvite, Instant> INVITES = new HashMap<>();
     private static final Set<Guild> GUILDS_TO_UPDATE = new HashSet<>();
     private static boolean reworkInitialized;
+
+    static {
+        new BukkitRunnable() {
+            int secondsElapsed;
+
+            @Override
+            public void run() {
+                if (secondsElapsed % 20 == 0) {
+                    Warlords.newChain()
+                            .async(GuildManager::updateGuilds)
+                            .sync(GUILDS_TO_UPDATE::clear)
+                            .execute();
+                }
+                secondsElapsed++;
+            }
+        }.runTaskTimer(Warlords.getInstance(), 60, 20);
+    }
 
     public static void updateGuilds() {
         GUILDS_TO_UPDATE.forEach(guild -> DatabaseManager.guildService.update(guild));
