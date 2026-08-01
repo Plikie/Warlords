@@ -57,6 +57,10 @@ public class VialProfile {
         return activeVial == null ? 1 : activeVial.type().getMultiplier();
     }
 
+    public long getFairyEssencePurchaseWeek() {
+        return fairyEssencePurchaseWeek;
+    }
+
     public boolean purchasedFairyEssenceThisWeek(long week) {
         return fairyEssencePurchaseWeek == week;
     }
