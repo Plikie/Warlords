@@ -26,7 +26,9 @@ public final class VialMenu {
             int amount = profile.getAmount(type);
             VialProfile.ActiveVial activeVial = profile.getActive(type.getCategory());
             List<Component> lore = new ArrayList<>();
+            lore.add(Component.empty());
             lore.add(type.getEffectDescription());
+            lore.add(Component.empty());
             lore.add(Component.text("Duration: " + formatDuration(type.getDuration()), NamedTextColor.GRAY));
             lore.add(Component.text("Owned: " + amount, amount > 0 ? NamedTextColor.GREEN : NamedTextColor.RED));
             if (activeVial != null) {

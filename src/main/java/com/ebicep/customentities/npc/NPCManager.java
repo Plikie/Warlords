@@ -56,7 +56,6 @@ public class NPCManager {
                 createLegendaryWeaponNPC();
                 createSupplyDropFairNPC();
                 createBountyMenuNPC();
-                createGuildGrandmasterNPC();
                 createStarPieceSynthesizerNPC();
                 createItemCrafterNPC();
                 createIllusionVendorNPC();
@@ -214,53 +213,6 @@ public class NPCManager {
         HologramManager.addHologram(new Hologram.Builder("bountyHunter", location.clone().add(0, 2.1, 0), player -> hologramDataText)
                 .setVisibility(VisibilityType.ALL)
                 .build());
-    }
-
-    public static void createGuildGrandmasterNPC() {
-        registerTrait(GuildGrandmasterTrait.class, "GuildGrandmasterTrait");
-        NPC npc = NPC_REGISTRY.createNPC(EntityType.VILLAGER, "guild-grandmaster");
-        npc.addTrait(GuildGrandmasterTrait.class);
-        LookClose lookClose = npc.getOrAddTrait(LookClose.class);
-        lookClose.setPerPlayer(true);
-        lookClose.toggle();
-        npc.data().set(NPC.Metadata.VILLAGER_BLOCK_TRADES, true);
-        npc.data().set(NPC.Metadata.NAMEPLATE_VISIBLE, false);
-        Location location = new Location(StatsLeaderboardManager.MAIN_LOBBY_SPAWN.getWorld(), 29.5, 81, 165.5, 90, 0);
-        npc.spawn(location);
-        HologramDataText hologramDataText = new HologramDataText.Builder<>(ComponentBuilder.create("Guild Grandmaster", NamedTextColor.GREEN).build())
-                .setBillboard(Display.Billboard.CENTER)
-                .build();
-        HologramManager.addHologram(new Hologram.Builder("guildGrandmaster", location.clone().add(0, 2.1, 0), player -> hologramDataText)
-                .setVisibility(VisibilityType.ALL)
-                .build());
-    }
-
-    public static void createGuildGrandmasterNPC() {
-        registerTrait(GuildGrandmasterTrait.class, "GuildGrandmasterTrait");
-
-        NPC npc = NPC_REGISTRY.createNPC(EntityType.VILLAGER, "guild-grandmaster");
-        npc.addTrait(GuildGrandmasterTrait.class);
-
-        LookClose lookClose = npc.getOrAddTrait(LookClose.class);
-        lookClose.setPerPlayer(true);
-        lookClose.toggle();
-
-        npc.data().set(NPC.Metadata.VILLAGER_BLOCK_TRADES, true);
-        npc.data().set(NPC.Metadata.NAMEPLATE_VISIBLE, false);
-
-        Location location = new Location(StatsLeaderboardManager.MAIN_LOBBY_SPAWN.getWorld(), 29.5, 81, 165.5, 90, 0);
-        npc.spawn(location);
-
-        HologramDataText hologramDataText = new HologramDataText.Builder<>(ComponentBuilder.create(
-                "Guild Grandmaster",
-                NamedTextColor.GREEN
-        ).build()).setBillboard(Display.Billboard.CENTER).build();
-        HologramManager.addHologram(new Hologram.Builder(
-                        "guildGrandmaster",
-                        location.clone().add(0, 2.1, 0),
-                        player -> hologramDataText
-                ).setVisibility(VisibilityType.ALL).build()
-        );
     }
 
     public static void createStarPieceSynthesizerNPC() {
