@@ -1,3 +1,4 @@
+import org.gradle.api.file.DuplicatesStrategy
 import xyz.jpenilla.resourcefactory.bukkit.BukkitPluginYaml
 import xyz.jpenilla.resourcefactory.paper.PaperPluginYaml
 import java.time.Instant
@@ -144,10 +145,17 @@ tasks {
 
     jar {
         archiveVersion.set(archiveVersionSuffix)
+        // Keep the unshaded Mojang-mapped jar from colliding with the plugin artifact.
+        archiveClassifier.set("dev")
     }
 
     shadowJar {
         archiveVersion.set(archiveVersionSuffix)
+        archiveClassifier.set("dev-all")
+        mergeServiceFiles()
+        filesMatching("META-INF/services/**") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
         relocate("co.aikar.commands", "com.ebicep.warlords.acf.acf")
         relocate("co.aikar.locales", "com.ebicep.warlords.acf.locales")
 
@@ -157,6 +165,8 @@ tasks {
     }
 
     reobfJar {
+        // Shade first, then remap. Otherwise the installed jar is missing ACF/JDA/Mongo/etc.
+        inputJar.set(shadowJar.flatMap { it.archiveFile })
         val output = System.getProperty("outputDirectory")
         if (output != null) {
             outputJar.set(layout.buildDirectory.file("${output}${project.name}-${archiveVersionSuffix}.jar"))
