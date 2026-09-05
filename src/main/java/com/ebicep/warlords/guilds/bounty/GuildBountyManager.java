@@ -1,5 +1,6 @@
 package com.ebicep.warlords.guilds.bounty;
 
+import com.ebicep.warlords.Warlords;
 import com.ebicep.warlords.database.DatabaseManager;
 import com.ebicep.warlords.database.leaderboards.guilds.GuildLeaderboardManager;
 import com.ebicep.warlords.database.repositories.player.pojos.general.DatabasePlayer;
@@ -7,14 +8,11 @@ import com.ebicep.warlords.guilds.Guild;
 import com.ebicep.warlords.guilds.GuildPlayer;
 import com.ebicep.warlords.pve.Spendable;
 import com.ebicep.warlords.pve.rewards.types.BountyReward;
+import com.ebicep.warlords.util.java.DateUtil;
 import com.ebicep.warlords.util.java.NumberFormat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 public final class GuildBountyManager {
 
@@ -47,7 +46,7 @@ public final class GuildBountyManager {
     }
 
     public static void validateWeek(Guild guild, GuildBountyData data) {
-        long currentWeek = getCurrentWeekStartEpochDay();
+        long currentWeek = DateUtil.getCurrentWeekStartEpochDay();
         boolean changed = false;
         if (data.getWeekStartEpochDay() != currentWeek) {
             data.setWeekStartEpochDay(currentWeek);
@@ -136,9 +135,19 @@ public final class GuildBountyManager {
     private static void completeBounty(Guild guild, GuildBounty bounty) {
         LinkedHashMap<Spendable, Long> playerRewards = bounty.getPlayerRewards();
         for (GuildPlayer guildPlayer : guild.getPlayers()) {
-            DatabasePlayer databasePlayer = DatabaseManager.getPlayer(guildPlayer.getUUID());
-            databasePlayer.getPveStats().getBountyRewards().add(new BountyReward(new LinkedHashMap<>(playerRewards), bounty.getName()));
-            DatabaseManager.queueUpdatePlayerAsync(databasePlayer);
+            UUID uuid = guildPlayer.getUUID();
+            LinkedHashMap<Spendable, Long> rewardsCopy = new LinkedHashMap<>(playerRewards);
+            Warlords.newChain()
+                    .asyncFirst(() -> DatabaseManager.playerService.findByUUID(uuid))
+                    .syncLast(optional -> {
+                        if (optional.isEmpty()) {
+                            return;
+                        }
+                        DatabasePlayer databasePlayer = optional.get();
+                        databasePlayer.getPveStats().getBountyRewards().add(new BountyReward(rewardsCopy, bounty.getName()));
+                        DatabaseManager.queueUpdatePlayerAsync(databasePlayer);
+                    })
+                    .execute();
         }
 
         guild.addCurrentCoins(bounty.getGuildCoins());
@@ -169,9 +178,5 @@ public final class GuildBountyManager {
         }
         Collections.shuffle(available);
         return available.isEmpty() ? null : available.get(0);
-    }
-
-    private static long getCurrentWeekStartEpochDay() {
-        return LocalDate.now(ZoneOffset.UTC).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toEpochDay();
     }
 }

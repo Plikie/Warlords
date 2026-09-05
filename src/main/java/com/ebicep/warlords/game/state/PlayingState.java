@@ -36,7 +36,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
@@ -57,6 +56,7 @@ public class PlayingState implements State, TimerDebugAble {
 
     public PlayingState(@Nonnull Game game) {
         this.game = game;
+        this.updater = new PlayingStateScoreboardUpdater(game);
     }
 
     @Override
@@ -145,14 +145,13 @@ public class PlayingState implements State, TimerDebugAble {
                 winEvent = event;
             }
         });
-        this.updater = new PlayingStateScoreboardUpdater(game);
         new GameRunnable(game) {
 
             @Override
             public void run() {
                 updater.update();
             }
-        }.runTaskTimer(0, 10);
+        }.runTaskTimer(0, 1);
 
         ChatUtils.MessageType.GAME_DEBUG.sendMessage("Started recording timed stats");
 
@@ -275,16 +274,16 @@ public class PlayingState implements State, TimerDebugAble {
             ).map(LocationMarker::getLocation).collect(Utils.randomElement());
             player.teleport(spawn);
             // Spectator - delay one tick so gamemode applies after teleport
-            new BukkitRunnable() {
+            new GameRunnable(getGame()) {
 
                 @Override
                 public void run() {
                     player.setGameMode(GameMode.SPECTATOR);
                 }
-            }.runTaskLater(Warlords.getInstance(), 1);
+            }.runTaskLater(1);
         }
         if (wp instanceof WarlordsPlayer warlordsPlayer) {
-            updater.updateBasedOnGameState(CustomScoreboard.getPlayerScoreboard(player), warlordsPlayer);
+            updater.updateBasedOnGameState(warlordsPlayer);
         }
         game.forEachEnabledOption(option -> option.onPlayerReJoinGame(player));
     }
