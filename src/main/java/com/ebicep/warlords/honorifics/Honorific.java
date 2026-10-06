@@ -38,7 +38,7 @@ public enum Honorific {
     LOSER("Loser", "Die 1,000 times.", Material.BONE, null),
     GOOBER("Goober", "Die to your own damage.", Material.SLIME_BALL, null),
     MONEYBAGS("Moneybags", "Earn 200,000 coins from a single game.", Material.GOLD_BLOCK, null),
-    PICKLE("Pickle", "Win a game with Plikie in your party.", Material.SEA_PICKLE, null),
+    PICKLE("Pickle", "?????", Material.SEA_PICKLE, null),
     REAPER("Reaper", "Kill someone with the Sacrifice item.", Material.IRON_HOE, null),
     NO_LIFE("No Life", "Play 10,000 games.", Material.RECOVERY_COMPASS, null);
 
@@ -76,21 +76,5 @@ public enum Honorific {
 
     public boolean isPurchasable() {
         return cost != null;
-    }
-
-    public boolean isHidden() {
-        return this == PICKLE;
-    }
-
-    public String getMenuName(boolean unlocked) {
-        return isHidden() && !unlocked ? "?????" : displayName;
-    }
-
-    public String getMenuRequirement(boolean unlocked) {
-        return isHidden() && !unlocked ? "?????" : requirement;
-    }
-
-    public Material getMenuIcon(boolean unlocked) {
-        return isHidden() && !unlocked ? Material.PAPER : icon;
     }
 }
