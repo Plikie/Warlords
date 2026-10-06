@@ -32,7 +32,7 @@ public class SlayerII extends AbstractBounty implements TracksDuringGame, DailyC
 
     @Override
     public int getTarget() {
-        return 20;
+        return 10;
     }
 
     @Override
