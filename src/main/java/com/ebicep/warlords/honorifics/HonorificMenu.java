@@ -40,12 +40,12 @@ public final class HonorificMenu {
 
         for (int i = 0; i < Honorific.VALUES.length; i++) {
             Honorific honorific = Honorific.VALUES[i];
-            int x = 1 + i % 7;
-            int y = 1 + i / 7;
+            int x = i % 9;
+            int y = 1 + i / 9;
             boolean unlocked = profile.isUnlocked(honorific);
             boolean equipped = profile.getEquippedHonorific() == honorific;
-            ItemBuilder builder = new ItemBuilder(honorific.getIcon())
-                    .name(Component.text(honorific.getDisplayName(), unlocked ? NamedTextColor.AQUA : NamedTextColor.GRAY))
+            ItemBuilder builder = new ItemBuilder(honorific.getMenuIcon(unlocked))
+                    .name(Component.text(honorific.getMenuName(unlocked), unlocked ? NamedTextColor.AQUA : NamedTextColor.GRAY))
                     .lore(getHonorificLore(honorific, databasePlayer, unlocked, equipped));
             if (equipped) {
                 builder.glow();
@@ -180,11 +180,12 @@ public final class HonorificMenu {
     private static List<Component> getHonorificLore(Honorific honorific, DatabasePlayer databasePlayer, boolean unlocked, boolean equipped) {
         List<Component> lore = new ArrayList<>();
         lore.add(Component.empty());
-        lore.add(Component.text(honorific.getRequirement(), NamedTextColor.GRAY));
+        lore.add(Component.text(honorific.getMenuRequirement(unlocked), NamedTextColor.GRAY));
         if (!unlocked) {
             lore.add(Component.empty());
+            String progress = honorific.isHidden() ? "?????" : HonorificManager.getProgressText(honorific, databasePlayer);
             lore.add(Component.text("Progress: ", NamedTextColor.GRAY)
-                    .append(Component.text(HonorificManager.getProgressText(honorific, databasePlayer), NamedTextColor.YELLOW)));
+                    .append(Component.text(progress, NamedTextColor.YELLOW)));
             if (honorific.getCost() != null) {
                 lore.add(Component.empty());
                 lore.addAll(honorific.getCost().getLore());
