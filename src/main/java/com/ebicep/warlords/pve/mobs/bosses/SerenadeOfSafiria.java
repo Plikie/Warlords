@@ -46,7 +46,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
     private final CrimsonRefuge refuge = new CrimsonRefuge();
 
     private Location mapCenter;
-    private CrimsonWaltzAbility waltz;
+    private CrimsonFanAbility fan;
     private StageCurtainAbility curtain;
     private VeinLatticeAbility lattice;
     private MasqueradePartnerAbility masquerade;
@@ -107,7 +107,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
         super.onSpawn(option);
 
         mapCenter = new Location(warlordsNPC.getWorld(), 112.5, 13, 62.5);
-        waltz = new CrimsonWaltzAbility(warlordsNPC, () -> mapCenter);
+        fan = new CrimsonFanAbility(warlordsNPC, () -> mapCenter);
         curtain = new StageCurtainAbility(warlordsNPC, () -> mapCenter, refuge);
         lattice = new VeinLatticeAbility(warlordsNPC, () -> mapCenter, refuge);
         masquerade = new MasqueradePartnerAbility(warlordsNPC, () -> mapCenter);
@@ -148,7 +148,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
         phaseOverture = new BossAbilityPhase(warlordsNPC, 90, () -> {
             subtitle("The overture begins. Silence the choir.");
             spawnChoir(3);
-            castWaltz();
+            castFan();
         });
 
         phaseCurtain = new BossAbilityPhase(warlordsNPC, 75, () -> {
@@ -266,7 +266,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
             beginThread();
         }
         if (ticksElapsed % (finalSerenade ? 140 : 280) == 0) {
-            castWaltz();
+            castFan();
         }
         if (ticksElapsed % 420 == 0) {
             lattice.start(warlordsNPC.getGame());
@@ -285,8 +285,8 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
         performing = false;
         clearThread();
         refuge.clear();
-        if (waltz != null) {
-            waltz.stop();
+        if (fan != null) {
+            fan.stop();
         }
         if (curtain != null) {
             curtain.stop();
@@ -330,7 +330,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
         performanceId++;
         performing = true;
         clearThread();
-        waltz.stop();
+        fan.stop();
         curtain.stop();
         lattice.stop();
         fang.stop();
@@ -339,12 +339,12 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
         toggleStun(true);
     }
 
-    private void castWaltz() {
-        if (performing || waltz.isRunning()) {
+    private void castFan() {
+        if (performing || fan.isRunning()) {
             return;
         }
         toggleStun(true);
-        waltz.start(warlordsNPC.getGame());
+        fan.start(warlordsNPC.getGame());
         new GameRunnable(warlordsNPC.getGame()) {
             @Override
             public void run() {
@@ -352,7 +352,7 @@ public class SerenadeOfSafiria extends AbstractMob implements BossMob {
                     toggleStun(false);
                 }
             }
-        }.runTaskLater(CrimsonWaltzAbility.DURATION);
+        }.runTaskLater(CrimsonFanAbility.DURATION);
     }
 
     private void spawnChoir(int count) {

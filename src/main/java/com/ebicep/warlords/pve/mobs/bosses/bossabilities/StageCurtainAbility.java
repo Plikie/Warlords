@@ -8,14 +8,24 @@ import com.ebicep.warlords.util.warlords.GameRunnable;
 import com.ebicep.warlords.util.warlords.PlayerFilter;
 import com.ebicep.warlords.util.warlords.Utils;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.entity.Display;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
  * Two curtains close from opposite rims, leave a six-block gap, slide that gap
  * across the floor, then slam anyone still outside it.
+ * The curtains and the safe lane are item displays, not particles.
  */
 public class StageCurtainAbility {
 
@@ -24,10 +34,17 @@ public class StageCurtainAbility {
     private static final int SLAM_TICKS = 30;
     public static final int DURATION = CLOSE_TICKS + SLIDE_TICKS + SLAM_TICKS;
     private static final double GAP_HALF = 3;
+    private static final int PANELS_PER_EDGE = 16;
+    private static final double PANEL_SPACING = 4.2;
+    private static final int CARPETS = 5;
+    private static final double CARPET_SPACING = 8;
 
     private final WarlordsNPC warlordsNPC;
     private final Supplier<Location> centerSupplier;
     private final CrimsonRefuge refuge;
+    private final List<ItemDisplay> leftCurtain = new ArrayList<>();
+    private final List<ItemDisplay> rightCurtain = new ArrayList<>();
+    private final List<ItemDisplay> carpet = new ArrayList<>();
 
     private GameRunnable task;
     private boolean running;
@@ -56,6 +73,7 @@ public class StageCurtainAbility {
 
     public void stop() {
         running = false;
+        removeDisplays();
         if (task != null) {
             GameRunnable runningTask = task;
             task = null;
@@ -65,16 +83,25 @@ public class StageCurtainAbility {
 
     private void begin(Game game) {
         running = true;
+        removeDisplays();
         double axis = Math.random() * Math.PI;
+        Location center = safeCenter();
+        World world = center.getWorld();
+        if (world == null) {
+            running = false;
+            return;
+        }
+        spawnCurtain(world, center);
+
         task = new GameRunnable(game) {
             int tick = 0;
             boolean slammed = false;
 
             @Override
             public void run() {
-                Location center = safeCenter();
-                World world = center.getWorld();
-                if (!running || warlordsNPC.isDead() || world == null) {
+                Location at = safeCenter();
+                World currentWorld = at.getWorld();
+                if (!running || warlordsNPC.isDead() || currentWorld == null) {
                     stop();
                     cancel();
                     return;
@@ -83,18 +110,20 @@ public class StageCurtainAbility {
                 double ax = Math.cos(axis);
                 double az = Math.sin(axis);
                 double[] gap = gapEdges(tick);
-                drawGap(world, center, ax, az, gap[0], gap[1]);
+                placeCurtain(currentWorld, at, ax, az, gap[0], leftCurtain);
+                placeCurtain(currentWorld, at, ax, az, gap[1], rightCurtain);
+                placeCarpet(currentWorld, at, ax, az, (gap[0] + gap[1]) / 2.0);
 
                 boolean heavy = tick >= CLOSE_TICKS + SLIDE_TICKS && !slammed;
                 if (heavy) {
                     slammed = true;
-                    Utils.playGlobalSound(center, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 2.2f, 0.6f);
+                    Utils.playGlobalSound(at, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 2.2f, 0.6f);
                 } else if (tick % 20 == 0) {
-                    Utils.playGlobalSound(center, Sound.BLOCK_BEACON_AMBIENT, 1.4f, 1.4f);
+                    Utils.playGlobalSound(at, Sound.BLOCK_BEACON_AMBIENT, 1.4f, 1.4f);
                 }
 
                 if (heavy || tick % 10 == 0) {
-                    strike(center, ax, az, gap[0], gap[1], heavy);
+                    strike(at, ax, az, gap[0], gap[1], heavy);
                 }
 
                 if (++tick >= DURATION) {
@@ -122,27 +151,84 @@ public class StageCurtainAbility {
         return new double[]{mid - GAP_HALF, mid + GAP_HALF};
     }
 
-    private void drawGap(World world, Location center, double ax, double az, double left, double right) {
-        double y = center.getY() + 0.25;
-        double yTop = center.getY() + 1.6;
-        drawBoundary(world, y, center, ax, az, left, CrimsonGeometry.SAFE);
-        drawBoundary(world, yTop, center, ax, az, left, CrimsonGeometry.SAFE);
-        drawBoundary(world, y, center, ax, az, right, CrimsonGeometry.SAFE);
-        drawBoundary(world, yTop, center, ax, az, right, CrimsonGeometry.SAFE);
-        drawBoundary(world, y, center, ax, az, left - 1.8, CrimsonGeometry.BLOOD);
-        drawBoundary(world, yTop, center, ax, az, left - 1.8, CrimsonGeometry.BLOOD);
-        drawBoundary(world, y, center, ax, az, right + 1.8, CrimsonGeometry.BLOOD);
-        drawBoundary(world, yTop, center, ax, az, right + 1.8, CrimsonGeometry.BLOOD);
-        drawBoundary(world, y, center, ax, az, (left + right) / 2.0, CrimsonGeometry.PALE);
+    private void spawnCurtain(World world, Location center) {
+        Vector3f curtainScale = new Vector3f(3.8f, 3.6f, 0.2f);
+        Quaternionf upright = new Quaternionf().rotateX((float) Math.toRadians(90));
+        for (int i = 0; i < PANELS_PER_EDGE; i++) {
+            leftCurtain.add(spawnDisplay(world, center, Material.RED_STAINED_GLASS, curtainScale, upright));
+            rightCurtain.add(spawnDisplay(world, center, Material.RED_STAINED_GLASS, curtainScale, upright));
+        }
+        Vector3f carpetScale = new Vector3f(2.4f, 0.08f, 2.4f);
+        for (int i = 0; i < CARPETS; i++) {
+            carpet.add(spawnDisplay(world, center, Material.WHITE_CARPET, carpetScale, new Quaternionf()));
+        }
     }
 
-    private void drawBoundary(World world, double y, Location center, double ax, double az, double proj, org.bukkit.Particle.DustOptions dust) {
-        double half = Math.sqrt(Math.max(0, CrimsonGeometry.ARENA_RADIUS * CrimsonGeometry.ARENA_RADIUS - proj * proj));
+    private ItemDisplay spawnDisplay(World world, Location at, Material material, Vector3f scale, Quaternionf rotation) {
+        return world.spawn(at, ItemDisplay.class, display -> {
+            display.setItemStack(new ItemStack(material));
+            display.setBillboard(Display.Billboard.FIXED);
+            display.setPersistent(true);
+            display.setInvulnerable(true);
+            display.setTeleportDuration(2);
+            display.setInterpolationDuration(0);
+            display.setBrightness(new Display.Brightness(15, 15));
+            display.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), scale, rotation));
+        });
+    }
+
+    private void placeCurtain(World world, Location center, double ax, double az, double proj, List<ItemDisplay> panels) {
+        double half = chordHalf(proj);
         double px = -az;
         double pz = ax;
-        double ox = center.getX() + ax * proj;
-        double oz = center.getZ() + az * proj;
-        CrimsonGeometry.drawLine(world, y, ox - px * half, oz - pz * half, ox + px * half, oz + pz * half, dust, 1.15);
+        float yaw = (float) Math.toDegrees(Math.atan2(-ax, az));
+        int usable = half < 1.5 ? 0 : Math.min(panels.size(), (int) Math.ceil((half * 2) / PANEL_SPACING));
+        for (int i = 0; i < panels.size(); i++) {
+            ItemDisplay panel = panels.get(i);
+            if (panel == null || panel.isDead()) {
+                continue;
+            }
+            if (i >= usable) {
+                hide(panel);
+                continue;
+            }
+            panel.setViewRange(1f);
+            double span = usable == 1 ? 0 : -half + (PANEL_SPACING * 0.5) + i * ((2 * half - PANEL_SPACING) / Math.max(1, usable - 1));
+            double x = center.getX() + ax * proj + px * span;
+            double z = center.getZ() + az * proj + pz * span;
+            panel.teleport(new Location(world, x, center.getY() + 1.7, z, yaw, 0));
+        }
+    }
+
+    private void placeCarpet(World world, Location center, double ax, double az, double proj) {
+        double half = chordHalf(proj);
+        double px = -az;
+        double pz = ax;
+        float yaw = (float) Math.toDegrees(Math.atan2(-px, pz));
+        int usable = half < 2 ? 0 : Math.min(carpet.size(), (int) Math.ceil((half * 2) / CARPET_SPACING));
+        for (int i = 0; i < carpet.size(); i++) {
+            ItemDisplay tile = carpet.get(i);
+            if (tile == null || tile.isDead()) {
+                continue;
+            }
+            if (i >= usable) {
+                hide(tile);
+                continue;
+            }
+            tile.setViewRange(1f);
+            double span = usable == 1 ? 0 : -half + CARPET_SPACING * 0.5 + i * ((2 * half - CARPET_SPACING) / Math.max(1, usable - 1));
+            double x = center.getX() + ax * proj + px * span;
+            double z = center.getZ() + az * proj + pz * span;
+            tile.teleport(new Location(world, x, center.getY() + 0.08, z, yaw, 0));
+        }
+    }
+
+    private void hide(ItemDisplay display) {
+        display.setViewRange(0f);
+    }
+
+    private double chordHalf(double proj) {
+        return Math.sqrt(Math.max(0, CrimsonGeometry.ARENA_RADIUS * CrimsonGeometry.ARENA_RADIUS - proj * proj));
     }
 
     private void strike(Location center, double ax, double az, double left, double right, boolean heavy) {
@@ -175,6 +261,21 @@ public class StageCurtainAbility {
                 );
             }
         }
+    }
+
+    private void removeDisplays() {
+        removeAll(leftCurtain);
+        removeAll(rightCurtain);
+        removeAll(carpet);
+    }
+
+    private void removeAll(List<ItemDisplay> displays) {
+        for (ItemDisplay display : displays) {
+            if (display != null && !display.isDead()) {
+                display.remove();
+            }
+        }
+        displays.clear();
     }
 
     private Location safeCenter() {
