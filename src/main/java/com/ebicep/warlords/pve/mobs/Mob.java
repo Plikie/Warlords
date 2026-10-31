@@ -768,6 +768,15 @@ public enum Mob {
             Weapons.SILVER_PHANTASM_SWORD_4.getItem()
     )
     ),
+    SERENADE_OF_SAFIRIA(EntityType.WITHER_SKELETON, SerenadeOfSafiria.class, SerenadeOfSafiria::new, SerenadeOfSafiria::new, new Utils.SimpleEntityEquipment(
+            SkullUtils.getSkullFrom(SkullID.RED_EYE),
+            Utils.applyColorTo(Material.LEATHER_CHESTPLATE, 120, 8, 16),
+            Utils.applyColorTo(Material.LEATHER_LEGGINGS, 120, 8, 16),
+            Utils.applyColorTo(Material.LEATHER_BOOTS, 120, 8, 16),
+            Weapons.SILVER_PHANTASM_SCIMITAR.getItem(),
+            Weapons.SILVER_PHANTASM_SCIMITAR.getItem()
+    )
+    ),
     VEILKEEPER(EntityType.WITHER_SKELETON, Veilkeeper.class, Veilkeeper::new, Veilkeeper::new, new Utils.SimpleEntityEquipment(
             SkullUtils.getSkullFrom(SkullID.SILVER_KNIGHT),
             new ItemStack(Material.NETHERITE_CHESTPLATE),
@@ -943,6 +952,22 @@ public enum Mob {
             Utils.applyColorTo(Material.LEATHER_LEGGINGS, 220, 30, 90),
             Utils.applyColorTo(Material.LEATHER_BOOTS, 220, 30, 90),
             Weapons.SILVER_PHANTASM_SWORD_4.getItem()
+    )
+    ),
+    SANGUINE_CANTOR(EntityType.WITHER_SKELETON, SanguineCantor.class, SanguineCantor::new, SanguineCantor::new, new Utils.SimpleEntityEquipment(
+            SkullUtils.getSkullFrom(SkullID.RED_EYE),
+            Utils.applyColorTo(Material.LEATHER_CHESTPLATE, 120, 8, 16),
+            Utils.applyColorTo(Material.LEATHER_LEGGINGS, 120, 8, 16),
+            Utils.applyColorTo(Material.LEATHER_BOOTS, 120, 8, 16),
+            Weapons.SILVER_PHANTASM_SCIMITAR.getItem()
+    )
+    ),
+    MASQUE_THRALL(EntityType.HUSK, MasqueThrall.class, MasqueThrall::new, MasqueThrall::new, new Utils.SimpleEntityEquipment(
+            SkullUtils.getSkullFrom(SkullID.BLOOD_SPIDER),
+            Utils.applyColorTo(Material.LEATHER_CHESTPLATE, 70, 0, 8),
+            Utils.applyColorTo(Material.LEATHER_LEGGINGS, 70, 0, 8),
+            Utils.applyColorTo(Material.LEATHER_BOOTS, 70, 0, 8),
+            Weapons.SILVER_PHANTASM_SCIMITAR.getItem()
     )
     ),
     ECHO_OF_LILIUM(EntityType.BOGGED, EchoOfLilium.class, EchoOfLilium::new, EchoOfLilium::new, new Utils.SimpleEntityEquipment(
@@ -1449,7 +1474,9 @@ public enum Mob {
             ARACHNO_VENERATUS,
             SOUL_REAVER,
             ECHO_OF_BLADES,
-            FROST_VEIL
+            FROST_VEIL,
+            SANGUINE_CANTOR,
+            MASQUE_THRALL
     };
     public static final Mob[] BOSSES = {
             BOLTARO,
@@ -1465,6 +1492,7 @@ public enum Mob {
             ORBYZ,
             ONE_OF_NINE,
             LILIUM,
+            SERENADE_OF_SAFIRIA,
             CHESSKING,
             CHRONARCH,
             PHYSIRA,

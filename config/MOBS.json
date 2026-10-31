@@ -461,6 +461,30 @@
         "min_melee_damage": 450.0,
         "max_melee_damage": 600.0
       },
+      "SERENADE_OF_SAFIRIA": {
+        "name": "Serenade of Safiria",
+        "max_health": 320000,
+        "walk_speed": 0.44,
+        "damage_resistance": 36.0,
+        "min_melee_damage": 750.0,
+        "max_melee_damage": 1000.0
+      },
+      "SANGUINE_CANTOR": {
+        "name": "Sanguine Cantor",
+        "max_health": 9000,
+        "walk_speed": 0.0,
+        "damage_resistance": 15.0,
+        "min_melee_damage": 0.0,
+        "max_melee_damage": 0.0
+      },
+      "MASQUE_THRALL": {
+        "name": "Masque Thrall",
+        "max_health": 5500,
+        "walk_speed": 0.32,
+        "damage_resistance": 10.0,
+        "min_melee_damage": 500.0,
+        "max_melee_damage": 700.0
+      },
       "VEILKEEPER": {
         "name": "Veilkeeper",
         "max_health": 1500000,
