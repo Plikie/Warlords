@@ -9,8 +9,6 @@ import com.ebicep.customentities.nms.CustomRavager;
 import com.ebicep.customentities.nms.CustomSkeletonHorse;
 import com.ebicep.customentities.nms.CustomSniffer;
 import com.ebicep.customentities.nms.CustomZombieHorse;
-import com.ebicep.warlords.honorifics.HonorificCost;
-import com.ebicep.warlords.pve.Currencies;
 import net.minecraft.world.entity.Mob;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,14 +27,13 @@ public enum MountType {
     RAVAGER("Ravager", Material.RAVAGER_SPAWN_EGG, null, true, 1.44375 / 2.2625),
     PIG("Pig", Material.PIG_SPAWN_EGG, null, true, 1.44375 / 0.86875),
     LLAMA("Llama", Material.LLAMA_SPAWN_EGG, null, true, 1.44375 / 1.37),
-    HOGLIN("Hoglin", Material.HOGLIN_SPAWN_EGG, null, false, 1.44375 / 1.49375),
-    SNIFFER("Sniffer", Material.SNIFFER_SPAWN_EGG, null, false, 1.44375 / 2.09375),
-    GOAT("Goat", Material.GOAT_SPAWN_EGG, null, false, 1.44375 / 1.1125),
+    HOGLIN("Hoglin", Material.HOGLIN_SPAWN_EGG, null, true, 1.44375 / 1.49375),
+    SNIFFER("Sniffer", Material.SNIFFER_SPAWN_EGG, null, true, 1.44375 / 2.09375),
+    GOAT("Goat", Material.GOAT_SPAWN_EGG, null, true, 1.44375 / 1.1125),
 
     ;
 
     public static final MountType[] VALUES = values();
-    public static final HonorificCost COST = HonorificCost.of(Currencies.FAIRY_ESSENCE, 50_000);
 
     private final String displayName;
     private final Material icon;
@@ -83,11 +80,6 @@ public enum MountType {
             case BROWN, WHITE, SKELETON, ZOMBIE -> true;
             case RAVAGER, PIG, LLAMA, HOGLIN, SNIFFER, GOAT -> false;
         };
-    }
-
-    @Nullable
-    public HonorificCost getCost() {
-        return this == BROWN ? null : COST;
     }
 
     public Mob create(Location location) {
