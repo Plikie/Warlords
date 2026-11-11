@@ -176,7 +176,8 @@ public final class MountMenu {
 
     private static List<Component> armorLore(List<Component> lore) {
         List<Component> withNote = new ArrayList<>();
-        withNote.add(Component.text("Only applies to horse mounts", NamedTextColor.DARK_GRAY));
+        withNote.add(Component.empty());
+        withNote.add(Component.text("WARNING: Only applies to horse mounts.", NamedTextColor.DARK_GRAY));
         withNote.addAll(lore);
         return withNote;
     }
