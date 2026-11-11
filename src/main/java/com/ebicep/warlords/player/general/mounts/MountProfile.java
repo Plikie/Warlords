@@ -120,7 +120,7 @@ public class MountProfile {
             return false;
         }
         if (type.isSupporterExclusive()) {
-            return hasSupporter && unlockedTypes.contains(type);
+            return hasSupporter;
         }
         return type == MountType.BROWN || unlockedTypes.contains(type);
     }
