@@ -195,7 +195,7 @@ public class LegendaryOvergrowth extends AbstractLegendaryWeapon implements Libr
                 return;
             }
 
-            float shieldHealth = getOvergrowthShieldHealth(linkedAlly);
+            float shieldHealth = Math.max(0, getOvergrowthShieldHealth(linkedAlly));
             int stacks = (int) (shieldHealth / SHIELD_HEALTH_INTERVAL);
 
             if (stacks <= 0) {
@@ -285,6 +285,7 @@ public class LegendaryOvergrowth extends AbstractLegendaryWeapon implements Libr
         if (existingShield.isPresent()) {
             RegularCooldown<Shield> cooldown = existingShield.get();
             Shield shield = cooldown.getCooldownObject();
+            shield.setClampHealthAtZero(true);
 
             shield.setMaxShieldHealth(shieldCap);
             shield.addShieldHealth(shieldGain);
@@ -304,6 +305,7 @@ public class LegendaryOvergrowth extends AbstractLegendaryWeapon implements Libr
         }
 
         Shield shield = new Shield(getShieldName(), shieldCap);
+        shield.setClampHealthAtZero(true);
         shield.setShieldHealth(initialShield);
         data.overgrowthShield = shield;
 
